@@ -1,5 +1,5 @@
 """ common pytest fixtures """
-from urllib.parse import urlparse
+from urlparse import urlparse
 
 import pytest
 
@@ -20,7 +20,7 @@ class MockBofh(Bofh):
     """ bofh stub """
 
     def _connect(self, url, cert=None, insecure=False, timeout=None):
-        """Establish a connection with the bofh server"""
+        u"""Establish a connection with the bofh server"""
         self._connection = MockConnection(
             url,
             transport=MockConnection(
@@ -41,8 +41,8 @@ class MockBofh(Bofh):
         argslist = list(args)
         return tuple(argslist)
 
-    def get_motd(self, client="PyBofh", version='0.0.0.'):
-        return ''
+    def get_motd(self, client=u"PyBofh", version='0.0.0.'):
+        return u''
 
     # def login(self, user, password, init=True)
     # def logout(self)

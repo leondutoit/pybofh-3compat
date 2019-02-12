@@ -1,0 +1,14 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+argparse = "*"
+"backports.ssl_match_hostname" = "*"
+2to3 = "*"
+
+[requires]
+python_version = "3.7"

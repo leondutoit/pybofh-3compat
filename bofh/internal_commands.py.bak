@@ -35,18 +35,18 @@ Implemented commands
 - script
 - source
 """
-
+from __future__ import with_statement
 
 import logging
 import os
 
 # Helptexts for the help() function
 _helptexts = {
-    'commands': "commands -- list commands",
-    'help': "help | help command | help command1 command2 -- Get help",
-    'quit': "quit -- quit bofh",
-    'script': "script | script filename -- log to file",
-    'source': "source [--ignore-errors] file -- Read commands from file",
+    u'commands': u"commands -- list commands",
+    u'help': u"help | help command | help command1 command2 -- Get help",
+    u'quit': u"quit -- quit bofh",
+    u'script': u"script | script filename -- log to file",
+    u'source': u"source [--ignore-errors] file -- Read commands from file",
 }
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def help(bofh, *args):
     if len(args) == 1:
         arg = args[0]
         if isinstance(arg, list):
-            return "\n".join([help(bofh, x) for x in arg])
+            return u"\n".join(map(lambda x: help(bofh, x), arg))
         if arg in _helptexts:
             return _helptexts[arg]
         return bofh.help(arg)
@@ -109,7 +109,7 @@ def source(bofh, ignore_errors=False, script=None):
             try:
                 parsed = parse(bofh, line)
                 ret.append(parsed.eval())
-            except BaseException as e:
+            except BaseException, e:
                 if not ignore_errors:
                     ret.append('Error: %s' % str(e))
                     ret.append('Sourcing of %s aborted on line %d' % (script,
@@ -135,10 +135,10 @@ def script(bofh, file=None):
     from . import readlineui
     if file:
         readlineui.script_file = open(file, "wa")
-        return "Copying output to %s" % file
+        return u"Copying output to %s" % file
     else:
         if readlineui.script_file:
-            ret = "Closing current scriptfile, {file}".format(
+            ret = u"Closing current scriptfile, {file}".format(
                 file=readlineui.script_file.name)
             readlineui.script_file.close()
             readlineui.script_file = None
@@ -175,5 +175,5 @@ def commands(bofh):
             cmd = getattr(grp, cmdname)
             fullname = cmd._fullname
             wide = max(wide, len(fullname))
-            ret.append([fullname, [grpname, cmdname] + list(map(str, cmd.args))])
-    return "\n".join(["%-*s -> %s" % tuple([wide] + x) for x in ret])
+            ret.append([fullname, [grpname, cmdname] + map(unicode, cmd.args)])
+    return u"\n".join(map(lambda x: "%-*s -> %s" % tuple([wide] + x), ret))

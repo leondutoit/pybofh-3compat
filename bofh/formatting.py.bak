@@ -59,11 +59,10 @@ str_vars
 
 
 """
-
+from __future__ import absolute_import, unicode_literals
 
 import abc
 import logging
-from functools import reduce
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +209,7 @@ class FormatSuggestion(object):
 
     @staticmethod
     def _iter_format_strings(string_vars):
-        if isinstance(string_vars, str):
+        if isinstance(string_vars, basestring):
             yield FormatItem(string_vars, None, None)
         else:
             for t in string_vars:
@@ -224,7 +223,7 @@ class FormatSuggestion(object):
                     sub_header = None
                 else:
                     raise ValueError("invalid tuple length (%d)" % (len(t), ))
-                fields = list(map(FieldRef.from_str, field_refs or ()))
+                fields = map(FieldRef.from_str, field_refs or ())
                 yield FormatItem(format_str, fields=fields, header=sub_header)
 
     @classmethod
@@ -235,8 +234,9 @@ class FormatSuggestion(object):
         return cls(items, header=header)
 
 
-class ResponseFormatter(object, metaclass=abc.ABCMeta):
+class ResponseFormatter(object):
     """ Abstract response formatter. """
+    __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
     def __call__(self, response):
@@ -254,7 +254,7 @@ class StringFormatter(ResponseFormatter):
     """ Response formatter for commands without a format suggestion. """
 
     def __call__(self, response):
-        if isinstance(response, str):
+        if isinstance(response, basestring):
             return response
         else:
             return repr(response)
@@ -276,7 +276,7 @@ class SuggestionFormatter(ResponseFormatter):
             if fmt_item.header:
                 yield fmt_item.header
             for part, data_item in enumerate(response, 1):
-                if isinstance(data_item, str):
+                if isinstance(data_item, basestring):
                     yield data_item
                     continue
                 if fmt_item.mismatches(data_item):

@@ -40,8 +40,8 @@ class SynErr(Exception):
 
     def __unicode__(self):
         if self.index is None:
-            return "Syntax error"
-        return "Syntax error at col %s: %s" % (self.index, self.msg)
+            return u"Syntax error"
+        return u"Syntax error at col %s: %s" % (self.index, self.msg)
 
 
 class IncompleteParse(SynErr):
@@ -57,7 +57,7 @@ class NoGroup(SynErr):
     """The group didn't match any defined command"""
 
     def __init__(self, parse, completions):
-        super(NoGroup, self).__init__("No matching command", 0)
+        super(NoGroup, self).__init__(u"No matching command", 0)
         self.parse = parse
         self.completions = completions
 
@@ -104,8 +104,8 @@ class Command(object):
 
         :param prompter: Callable to get single input item
         """
-        return ("Command: «%s» not implemented" %
-                " ".join([x[0] for x in self.args]))
+        return (u"Command: «%s» not implemented" %
+                u" ".join(map(lambda x: x[0], self.args)))
 
     def call(self):
         return self.eval()
@@ -266,8 +266,8 @@ def _parse_bofh_command(bofh, fullgrp, group, start, lex, line):
     allcmds = grp.get_bofh_command_keys()
     try:
         cmd, idx, fltrcmds, solematch = parse_string(lex, allcmds)
-    except IncompleteParse as e:
-        ret.append("", -1, allcmds)
+    except IncompleteParse, e:
+        ret.append(u"", -1, allcmds)
         raise IncompleteParse(e.args[0], ret, e.completions)
 
     ret.append(cmd, idx, fltrcmds)
@@ -280,17 +280,17 @@ def _parse_bofh_command(bofh, fullgrp, group, start, lex, line):
             try:
                 arg, idx = parse_string_or_list(lex)
                 ret.append(arg, idx, ArgCompleter(expected))
-            except IncompleteParse as e:  # arg, idx = e.parse
+            except IncompleteParse, e:  # arg, idx = e.parse
                 if e.parse:
                     arg, idx = e.parse
                     ret.append(arg, idx, ArgCompleter(expected))
                 # TODO/TBD: use e.completions?
-                ret.append("", -1, ArgCompleter(expected))
+                ret.append(u"", -1, ArgCompleter(expected))
         try:
             while True:
                 arg, idx = parse_string_or_list(lex)
                 ret.append(arg, idx, [])
-        except IncompleteParse as e:
+        except IncompleteParse, e:
             if e.parse:
                 arg, idx = parse_string_or_list(lex)
                 ret.append(arg, idx, ArgCompleter(expected))
@@ -309,17 +309,17 @@ def _parse_help(bofh, fullgrp, group, start, lex, line):
         try:
             arg, idx = parse_string_or_list(lex)
             args.append((arg, idx))
-        except IncompleteParse as e:
+        except IncompleteParse, e:
             # XXX: handle better
             if e.parse:
                 args.append(e.parse)
             break
 
-    localcmds = list(_internal_cmds.keys())
+    localcmds = _internal_cmds.keys()
     if len(args) > 2:
-        raise SynErr("Too many arguments for help", args[2][1])
+        raise SynErr(u"Too many arguments for help", args[2][1])
     elif len(args) == 0:
-        ret.append('', -1, localcmds + bofh.get_bofh_command_keys())
+        ret.append(u'', -1, localcmds + bofh.get_bofh_command_keys())
         return ret
     elif len(args) <= 2:
         bofhcmds = bofh.get_bofh_command_keys()
@@ -328,14 +328,14 @@ def _parse_help(bofh, fullgrp, group, start, lex, line):
         def match_item(cmd, expected):
             if isinstance(cmd[0], (list, tuple)):
                 return (
-                    [match_item(x, expected) for x in cmd[0]],
+                    map(lambda x: match_item(x, expected), cmd[0]),
                     cmd[1],
                     [],
                 )
             return (
                 cmd[0],
                 cmd[1],
-                [x for x in expected if x.startswith(cmd[0])],
+                filter(lambda x: x.startswith(cmd[0]), expected),
             )
 
         cmd, idx, completes = match_item(args[0], allcmds)
@@ -361,7 +361,7 @@ def _parse_help(bofh, fullgrp, group, start, lex, line):
                     pass
                     # ret.set_help_str(_internal_help(*completes[0]))
                 else:
-                    raise SynErr("Too many arguments for help", args[1][1])
+                    raise SynErr(u"Too many arguments for help", args[1][1])
             else:
                 pass  # incomplete, find group/internal command
     return ret
@@ -382,7 +382,7 @@ def _parse_script(bofh, fullgrp, group, start, lex, line):
             # XXX: handle better
             break
     if len(args) > 1:
-        raise SynErr("Too many arguments for script", args[1][1])
+        raise SynErr(u"Too many arguments for script", args[1][1])
     elif len(args) == 1:
         if _r(arg):
             ret.append(arg, idx, [arg])
@@ -411,8 +411,8 @@ def _parse_source(bofh, fullgrp, group, start, lex, line):
         ret.append(None, -1, FileCompleter())
     elif len(args) == 1:
         # XXX: Have a filecompleter that also expands --ignore-errors?
-        if '--ignore-errors'.startswith(args[0][0]):
-            ret.append(args[0][0], args[0][1], ['--ignore-errors'])
+        if u'--ignore-errors'.startswith(args[0][0]):
+            ret.append(args[0][0], args[0][1], [u'--ignore-errors'])
         elif _r(args[0][0]):
             ret.append(None, None, [])
             ret.append(args[0][0], args[0][1], [args[0][0]])
@@ -420,14 +420,14 @@ def _parse_source(bofh, fullgrp, group, start, lex, line):
             ret.append(None, None, [])
             ret.append(arg, idx, FileCompleter())
     elif len(args) == 2:
-        if '--ignore-errors'.startswith(args[0][0]):
-            ret.append(args[0][0], idx, ['--ignore-errors'])
+        if u'--ignore-errors'.startswith(args[0][0]):
+            ret.append(args[0][0], idx, [u'--ignore-errors'])
         else:
-            raise SynErr("Expected --ignore-errors, found %s" %
+            raise SynErr(u"Expected --ignore-errors, found %s" %
                          args[0][0], args[0][1])
         ret.append(arg, idx, FileCompleter())
     else:
-        raise SynErr("Too many arguments for source", args[2][1])
+        raise SynErr(u"Too many arguments for source", args[2][1])
     return ret
 
 
@@ -442,11 +442,11 @@ def _parse_single(bofh, fullgrp, group, start, lex, line):
 # TODO: This should probably be linked with internal_commands in some other
 #       way?
 _internal_cmds = {
-    'commands': _parse_single,
-    'help': _parse_help,
-    'quit': _parse_single,
-    'script': _parse_script,
-    'source': _parse_source,
+    u'commands': _parse_single,
+    u'help': _parse_help,
+    u'quit': _parse_single,
+    u'script': _parse_script,
+    u'source': _parse_source,
 }
 
 
@@ -458,7 +458,7 @@ def parse(bofh, text):
     """
     lex = lexer(text)
     initial = bofh.get_bofh_command_keys()
-    allcmds = initial + list(_internal_cmds.keys())
+    allcmds = initial + _internal_cmds.keys()
     try:
         group, idx, fltrcmds, solematch = parse_string(lex, allcmds)
     except IncompleteParse:
@@ -494,16 +494,16 @@ def parse_string(lex, expected=[]):
     3: A match for parsed string in expected
     Raises SynErr if read item is a paren"""
     try:
-        val, idx = next(lex)
+        val, idx = lex.next()
     except StopIteration:
-        raise IncompleteParse("Expected string, got nothing", "", expected)
+        raise IncompleteParse(u"Expected string, got nothing", u"", expected)
     if idx == -1:
         # XXX: Do sane stuff here
 
-        raise IncompleteParse("Expected %s, got nothing" % val, "", expected)
-    if val in ('(', ')'):
+        raise IncompleteParse(u"Expected %s, got nothing" % val, u"", expected)
+    if val in (u'(', u')'):
         raise SynErr("Expected string, got %s" % val, idx)
-    expected = [x for x in expected if x.startswith(val)]
+    expected = filter(lambda x: x.startswith(val), expected)
     if len(expected) == 1:
         solematch = expected[0]
     elif val in expected:
@@ -523,68 +523,68 @@ def parse_string_or_list(lex):
                 # signals missing char after \ or missing matching ".
                 try:
                     # gets either ", -1 or some last token
-                    val1, idx1 = next(lex)
+                    val1, idx1 = lex.next()
                 except StopIteration:  # no last token
-                    raise IncompleteParse("Expected %s, got nothing" % (
-                        "something" if val == '\\' else ')'), ret, [])
+                    raise IncompleteParse(u"Expected %s, got nothing" % (
+                        u"something" if val == u'\\' else u')'), ret, [])
                 if idx1 == -1:  # signal we want both a \ ending and a "
                     try:  # check if the last token waits.
-                        val1, idx1 = next(lex)
+                        val1, idx1 = lex.next()
                         ret.append((val1, idx1))
                         raise IncompleteParse(
-                            "Expected something and \", got nothing",
-                            ret, [' ")'])
+                            u"Expected something and \", got nothing",
+                            ret, [u' ")'])
                     except StopIteration:
                         raise IncompleteParse(
-                            "Expected something and \", got nothing",
-                            ret, [' ")'])
+                            u"Expected something and \", got nothing",
+                            ret, [u' ")'])
                 else:
                     # val1, idx1 holds the last token
                     ret.append((val1, idx1))
                     raise IncompleteParse(
-                        "Expected %s, got nothing" %
-                        ("something" if val == "\\" else ')'),
-                        ret, [' )' if val == "\\" else '")'])
-            elif val == '(':
+                        u"Expected %s, got nothing" %
+                        (u"something" if val == u"\\" else u')'),
+                        ret, [u' )' if val == u"\\" else u'")'])
+            elif val == u'(':
                 # we don't know what to do
                 # XXX: should we continue parsing?
                 raise SynErr("Nested list expression", idx)
-            elif val == ')':
+            elif val == u')':
                 return ret
             ret.append((val, idx))
-        raise IncompleteParse("Expected ), got nothing", ret, [])
+        raise IncompleteParse(u"Expected ), got nothing", ret, [])
     try:
-        val, idx = next(lex)
+        val, idx = lex.next()
     except StopIteration:
         raise IncompleteParse(
-            "Expected string or list, got nothing", None, [])
+            u"Expected string or list, got nothing", None, [])
     if idx == -1:
         try:
-            val1, idx1 = next(lex)
+            val1, idx1 = lex.next()
         except StopIteration:  # no last token
             raise IncompleteParse(
-                "Expected %s, got nothing" %
-                ("something" if val == '\\' else '"'),
-                None, [' ' if val == '\\' else '"'])
+                u"Expected %s, got nothing" %
+                (u"something" if val == u'\\' else u'"'),
+                None, [u' ' if val == u'\\' else u'"'])
         if idx1 == -1:  # signal we want both a \ ending and a "
             try:  # check if the last token waits.
-                val1, idx1 = next(lex)
+                val1, idx1 = lex.next()
                 raise IncompleteParse(
-                    "Expected something and \", got nothing",
-                    (val1, idx1), [' "'])
+                    u"Expected something and \", got nothing",
+                    (val1, idx1), [u' "'])
             except StopIteration:
                 raise IncompleteParse(
-                    "Expected something and \", got nothing",
-                    None, [' "'])
+                    u"Expected something and \", got nothing",
+                    None, [u' "'])
         else:  # val1, idx1 holds the last token
             raise IncompleteParse(
-                "Expected %s, got nothing" %
-                ("something" if val == "\\" else ')'),
-                (val1, idx1), [' ' if val == '\\' else '"'])
-    elif val == '(':
+                u"Expected %s, got nothing" %
+                (u"something" if val == u"\\" else u')'),
+                (val1, idx1), [u' ' if val == u'\\' else u'"'])
+    elif val == u'(':
         try:
             return parse_list(), idx
-        except IncompleteParse as e:
+        except IncompleteParse, e:
             e.parse = (e.parse, idx)
             raise
     else:
@@ -606,38 +606,38 @@ def lexer(text):
             ret.append(cur)
             backslash = False
         elif inquotes:
-            if cur == '"':
+            if cur == u'"':
                 inquotes = False
                 if not internalquotes:
                     internalquotes = False
-                    yield ''.join(ret), start
+                    yield u''.join(ret), start
                     ret = []
             else:
                 ret.append(cur)
-        elif cur == '(' or cur == ')':
+        elif cur == u'(' or cur == u')':
             if ret:
-                yield ''.join(ret), start
+                yield u''.join(ret), start
                 ret = []
             yield cur, i
-        elif cur == '"':
+        elif cur == u'"':
             inquotes = True
             internalquotes = bool(ret)
             if not internalquotes:
                 start = i
         elif cur.isspace():
             if ret:
-                yield ''.join(ret), start
+                yield u''.join(ret), start
                 ret = []
                 # yield u' ', i
-        elif cur == '\\':
+        elif cur == u'\\':
             backslash = True
         else:
             if not ret:
                 start = i
             ret.append(cur)
     if backslash:
-        yield '\\', -1
+        yield u'\\', -1
     if inquotes:
-        yield '"', -1
+        yield u'"', -1
     if ret:
-        yield ''.join(ret), start
+        yield u''.join(ret), start

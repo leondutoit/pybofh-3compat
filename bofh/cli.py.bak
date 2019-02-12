@@ -19,11 +19,11 @@
 """
 An interactive Cerebrum XMLRPC cli client.
 """
-
+from __future__ import print_function, unicode_literals
 
 import getpass
 import logging
-from urllib.parse import urlparse
+from urlparse import urlparse
 
 import bofh
 import bofh.config

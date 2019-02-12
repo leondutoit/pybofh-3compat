@@ -19,7 +19,7 @@
 # along with PyBofh; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""External modules for the PyBofh package
+u"""External modules for the PyBofh package
 
 This sub-package contains external modules and packages used by PyBofh. This
 will mainly be backports for backwards compability.
