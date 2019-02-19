@@ -124,7 +124,7 @@ try:
             if self.ca_file and self.do_match_hostname:
                 match_hostname(self.sock.getpeercert(), self.host)
 
-    class HTTPS(http.client.HTTPS, object):
+    class HTTPS(http.client.HTTPSConnection, object):
         """New-style HTTPS class"""
         # This will give us the object.mro() type method
         pass

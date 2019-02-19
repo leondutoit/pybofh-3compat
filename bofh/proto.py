@@ -54,7 +54,7 @@ def wash_response(bofh_response):
             bofh_response = (None if bofh_response == ':None'
                              else bofh_response[1:])
         if isinstance(bofh_response, str):
-            bofh_response = str(bofh_response, "ISO-8859-1")
+            bofh_response
     elif isinstance(bofh_response, (list, tuple)):
         bofh_response = type(bofh_response)((wash_response(x)
                                              for x in bofh_response))
